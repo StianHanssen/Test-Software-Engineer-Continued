@@ -1,9 +1,13 @@
+# Regular Modules:
 import pyvisgraph as vg
 from collections import defaultdict
 import numpy as np
 import csv
-from loader import read_mapping_csv, SweepDict, get_ordered_list
 import matplotlib.pyplot as plt
+import os
+
+# Project Modules:
+from .loader import read_mapping_csv, SweepDict, get_ordered_list
 
 def print_dict(wall_dict):
     # Prints dict nicely
@@ -261,7 +265,7 @@ def get_shortest_path(mapping_path, start_point, end_point):
     plt.plot(*end,'go',label='End Point')
     plt.legend()
     count = 35
-    with open('FlightPath.csv', 'a', newline='') as csvfile:
+    with open('data/FlightPath.csv', 'a', newline='') as csvfile:
         filewriter = csv.writer(csvfile)
         filewriter.writerow(' ')
         for point in shortest:
@@ -273,8 +277,8 @@ def get_shortest_path(mapping_path, start_point, end_point):
 
 
 if __name__ == '__main__':
-    flight_path = "FlightPath.csv"
-    lidar_path = "LIDARPoints.csv"
+    flight_path = os.path.join("data", "FlightPath.csv")
+    lidar_path = os.path.join("data", "LIDARPoints.csv")
 
     sweep_dict = SweepDict(lidar_path, flight_path)
     sweeps = get_ordered_list(sweep_dict)

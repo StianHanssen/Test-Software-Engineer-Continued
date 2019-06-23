@@ -1,8 +1,11 @@
-from loader import SweepDict
-from visualizer import collect_all
+# Regular Modules:
 import matplotlib.pyplot as plt
 import numpy as np
 import csv
+
+# Project Modules:
+from .loader import SweepDict
+from .visualizer import collect_all
 
 def onpick(event):
     # Print given index and position of point when clicked on

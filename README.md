@@ -14,8 +14,9 @@ All commands seen in install instructions should be written in terminal. Using a
 Installation can vary from computer to computer. You may need to manually install the packages by `pip install [package]`. Anaconda can make installation easier.
 
 #### Run instructions:
-* To run assignment 1: `python loader.py`
-* To run assignment 4: `python path_finder.py`
+Run the following commands in the project folder:
+* To run assignment 1: `python -m work_dir.loader`
+* To run assignment 4: `python -m work_dir.path_finder.py`
 
 #### Design decisions:
 ##### Assignment 1:

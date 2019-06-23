@@ -1,8 +1,12 @@
+# Regular Modules:
 import csv
 from collections import defaultdict
 import numpy as np
 import matplotlib.pyplot as plt
-from visualizer import display_drone_data
+import os
+
+# Project Modules:
+from .visualizer import display_drone_data
 
 def to_np_array(data_lines):
     # Convert list into np.array of floats
@@ -71,14 +75,14 @@ def add_cartesian_entry(sweep_dict):
             print("Warning: Skipping id %d, due to missing key %s" % (sweep_id, key))
 
 def SweepDict(file_path_lidar, file_path_flight_path):
-    sweep_dict = csv_reader("LIDARPoints.csv", "lidar_points")
-    sweep_dict = csv_reader("FlightPath.csv", "drone_position", sweep_dict)
+    sweep_dict = csv_reader(file_path_lidar, "lidar_points")
+    sweep_dict = csv_reader(file_path_flight_path, "drone_position", sweep_dict)
     add_cartesian_entry(sweep_dict)
     return sweep_dict
 
 if __name__ == '__main__':
-    flight_path = "FlightPath.csv"
-    lidar_path = "LIDARPoints.csv"
+    flight_path = os.path.join("data", "FlightPath.csv")
+    lidar_path = os.path.join("data", "LIDARPoints.csv")
 
     sweep_dict = SweepDict(lidar_path, flight_path)
     display_drone_data(sweep_dict)
