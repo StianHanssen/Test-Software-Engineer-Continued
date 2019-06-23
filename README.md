@@ -16,7 +16,7 @@ Installation can vary from computer to computer. You may need to manually instal
 #### Run instructions:
 Run the following commands in the project folder:
 * To run assignment 1: `python -m work_dir.visualizer`
-* To run assignment 4: `python -m work_dir.path_finder.py`
+* To run assignment 4: `python -m work_dir.path_finder`
 
 #### Run Tests:
 * To run unit tests: `python -m unittest discover tests.unit`
