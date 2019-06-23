@@ -282,7 +282,7 @@ def store_path(path, store_path, store_id):
             filewriter.writerow([point.x, point.y])
             store_id += 1
 
-def get_shortest_path(mapping_path, store_path, start_point, end_point, store_id):
+def get_shortest_path(mapping_path, storage_path, start_point, end_point, store_id):
     '''Creates polygons making up a layout from data given by CSV file at mapping_path,
     it further finds the shortest path from start_point to end_point. Then displays
     shortest path as well as layout. Finally, it saves the path in at store_path
@@ -307,7 +307,7 @@ def get_shortest_path(mapping_path, store_path, start_point, end_point, store_id
     polygons = [[vg.Point(*point) for point in poly] for poly in polygons]
     shortest_path = get_vg_shortest_path(polygons, start_point, end_point)
     plot_path(shortest_path)
-    store_path(shortest_path, store_path, store_id)
+    store_path(shortest_path, storage_path, store_id)
 
     plt.show() # Display everything plotted to far
 
