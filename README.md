@@ -18,6 +18,9 @@ Run the following commands in the project folder:
 * To run assignment 1: `python -m work_dir.visualizer`
 * To run assignment 4: `python -m work_dir.path_finder.py`
 
+#### Run Tests:
+* To run unit tests: `python -m unittest discover tests`
+
 #### Design decisions:
 ##### Assignment 1:
 * While working with the given data I decided to store it in a dictionary containing numpy arrays. I chose dictionary for robustness. I assumed there was a reason why ID was used instead of simply listing the data in order. I thought there may be a chance in the future that IDs are not in order or certain IDs would be missing. Dictionary would handle such a scenario better. To still maintain some performance numpy arrays was used as their operations are native and fast.
