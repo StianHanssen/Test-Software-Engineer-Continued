@@ -39,8 +39,8 @@ class IndexTracker(object):
         self.update()
 
     def update(self):
-        cartesian_points = self.sweep_dict[self.ind]["cartesian_points"]
-        drone_posision = self.sweep_dict[self.ind]["drone_position"]
+        cartesian_points = self.sweep_dict[self.ind].lidar_cartesian
+        drone_posision = self.sweep_dict[self.ind].drone_position
         # Update drone position and the corresposinding sweep
         self.points.set_offsets(np.c_[cartesian_points[:, 0], cartesian_points[:, 1]])
         self.positions.set_offsets(np.c_[drone_posision[0], drone_posision[1]])
@@ -48,7 +48,7 @@ class IndexTracker(object):
         self.ax.set_ylabel('ID: %s' % self.ind)
         self.points.axes.figure.canvas.draw()
 
-def collect_all(sweep_dict, key):
+def collect_all(sweep_dict, key): # Might be better to make a real SweepDict for this...
     sweep_items = sorted(sweep_dict.items(), key=lambda x: x[0])
     collected = [sweep[key] for _, sweep in sweep_items
                  if key in sweep]
