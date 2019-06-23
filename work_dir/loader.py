@@ -1,12 +1,8 @@
 # Regular Modules:
 import csv
-from collections import defaultdict
+from collections import OrderedDict
 import numpy as np
 import matplotlib.pyplot as plt
-import os
-
-# Project Modules:
-from .visualizer import display_drone_data
 
 class Sweep():
     '''
@@ -71,87 +67,109 @@ class Sweep():
         else: 
             self._lidar_cartesian = None
 
+class SweepDict(OrderedDict):
+    '''
+    Creates an ordered dafault dict for containing Sweep objects.
+    '''
+    def __init__(self, file_path_lidar, file_path_flight_path, last_id=33):
+        super().__init__()
+        self._csv_reader(file_path_lidar, "lidar_polar", last_id)
+        self._csv_reader(file_path_flight_path, "drone_position", last_id)
+        self._set_lidar_cartesian()
+    
+    def __getitem__(self, key):
+        # Adapts behavior of defaultdict.
+        if key not in self:
+            self.__setitem__(key, Sweep())
+        return super().__getitem__(key)
+
+    def _csv_reader(self, file_path, key, last_id):
+        # Read data from a CSV file into a dictionary.
+        # Dictionary format: Dict[sweep_id] = Sweep.
+        with open(file_path) as csv_data_file:
+            reader = list(csv.reader(csv_data_file))
+            index = 0
+            sweep_id = 0
+            while index < len(reader):
+                # Get "header" row and turn values to int:
+                if sweep_id + 1 > last_id:
+                    return
+                sweep_id, data_size = [int(value) for value in reader[index]]
+                index += 1
+                # Load the data_size number of lines into dictionary.
+                if key == "drone_position":
+                    data = to_np_array(reader[index: index + data_size])
+                    self[sweep_id].drone_position = data
+                elif key == "lidar_polar":
+                    data = to_np_array(reader[index: index + data_size])
+                    self[sweep_id].lidar_polar = data
+                index += data_size
+    
+    def _set_lidar_cartesian(self):
+        # Convert one sweep of polar LIDAR points to cartesian LIDAR points.
+        not_all_none = any([(sweep.lidar_polar is not None) and (sweep.drone_position is not None)
+                        for sweep in self.values()])
+        assert not_all_none, "All sweeps lack either drone_position or lidar_polar!"
+        for key, sweep in self.items():
+            drone_position = sweep.drone_position
+            lidar_polar = sweep.lidar_polar
+            if lidar_polar is None:
+                print("Warning: Skipping sweep %d, got lidar_polar can not be None" % (key))
+                continue
+            if  drone_position is None:
+                print("Warning: Skipping sweep %d, got drone_position can not be None" % (key))
+                continue
+            x, y = sweep.drone_position
+            angles, distances = np.hsplit(sweep.lidar_polar, 2)
+            distances = distances / 1000 # Converting to meters, using '/=' affects lidar_polar.
+            # Numpy can broadcast, thus executing the following equations for all LIDAR points:
+            cartesian_xs = x + distances * np.cos(np.radians(angles))
+            cartesian_ys = y - distances * np.sin(np.radians(angles))
+            sweep.lidar_cartesian = np.concatenate((cartesian_xs, cartesian_ys), axis=1)
+        
+    def get_all_drone_positions(self):
+        # Returns all drone positions or None if there are none.
+        collected = np.ndarray((len(self.keys()), 2))
+        count = 0
+        for sweep in self.values():
+            if sweep.drone_position is not None:
+                collected[count] = sweep.drone_position
+                count += 1
+        if count == 0:
+            return None
+        return collected[:count]
+    
+    def get_all_lidar_polar(self):
+        # Returns all polar lidar points or None if there are none.
+        collected = []
+        for sweep in self.values():
+            if sweep.lidar_polar is not None:
+                collected.append(sweep.lidar_polar)
+        if not collected:
+            return None
+        return np.concatenate(collected, axis=0)
+    
+    def get_all_lidar_cartesian(self):
+        collected = []
+        for sweep in self.values():
+            if sweep.lidar_cartesian is not None:
+                collected.append(sweep.lidar_cartesian)
+        if not collected:
+            return None
+        return np.concatenate(collected, axis=0)
+
 def to_np_array(data_lines):
-    # Convert list into np.array of floats
+    # Converts list of strings to np.array with dtype float.
     if len(data_lines) == 1:
         data_lines = data_lines[0]
     return np.array(data_lines, dtype=float)
 
-def csv_reader(file_path, key, csv_dict=None):
-    # Read data from a CSV file into a dictionary
-    # Dictionary format: Dict[sweep_id][key] = np.array of n data lines from csv
-    if csv_dict is None:
-        csv_dict = defaultdict(Sweep)
-    with open(file_path) as csv_data_file:
-        csv_reader = list(csv.reader(csv_data_file))
-        index = 0
-        while index < len(csv_reader):
-            # Get "header" row and turn values to int:
-            try:
-                sweep_id, data_size = [int(value) for value in csv_reader[index]]
-            except ValueError:
-                break
-            index += 1
-            # Load the data_size number of lines into dictionary
-            if key == "drone_position":
-                data = to_np_array(csv_reader[index: index + data_size])
-                csv_dict[sweep_id].drone_position = data
-            elif key == "lidar_polar":
-                data = to_np_array(csv_reader[index: index + data_size])
-                csv_dict[sweep_id].lidar_polar = data
-            index += data_size
-    return csv_dict
-
 def read_mapping_csv(file_path):
-    # Read data from CSV file into numpy array
-    # Format: np.array of shape (N, 4) where N is number mappings
+    '''Read data from CSV file into numpy array.
+    Intended for Mappings.cvs.
+    Output: np.array of shape (N, 4) where N is number mappings.'''
     with open(file_path) as csv_data_file:
         csv_reader = list(csv.reader(csv_data_file))
         array = to_np_array(csv_reader)
         return array
-
-def get_ordered_list(sweep_dict):
-    return list(sorted(sweep_dict.items(), key=lambda x: x[0]))
-
-def lidar_to_cartesian(drone_position, lidar_polar):
-    # Convert one sweep of LIDAR points to cartesian points
-    # Output format np.array of shape (N, 2) for N LIDAR points
-    assert drone_position.shape == (2,), "Expected drone_position shape of (2,)."
-    assert len(lidar_polar.shape) == 2 and lidar_polar.shape[1] == 2, \
-           "Expected lidar_polar of shape (N, 2) where N is a positive int."
-    x, y = drone_position
-    angles, distances = np.hsplit(lidar_polar, 2)
-    distances = distances / 1000 # Converting to meters, using '/=' affects lidar_polar
-    # Numpy can broadcast, thus executing the following equations for all LIDAR points:
-    cartesian_xs = x + distances * np.cos(np.radians(angles))
-    cartesian_ys = y - distances * np.sin(np.radians(angles))
-    return np.concatenate((cartesian_xs, cartesian_ys), axis=1)
-
-def add_cartesian_entry(sweep_dict):
-    # Creates "lidar_cartesian" entry in sweep_dict if 
-    # the keys "drone_position" and "lidar_polar" exist
-    assert any([sweep.drone_position is not None for sweep in sweep_dict.values()]), \
-           "Required entry 'drone_position' does not exist for any sweep in sweep_dict."
-    assert any([sweep.lidar_polar is not None for sweep in sweep_dict.values()]), \
-           "Required entry 'lidar_polar' does not exist for any sweep in sweep_dict."
-    for sweep_id, sweep in sweep_dict.items():
-        try:
-            drone_position = sweep.drone_position
-            lidar_polar = sweep.lidar_polar
-            sweep_dict[sweep_id].lidar_cartesian = lidar_to_cartesian(drone_position, lidar_polar)
-        except KeyError as key:
-            print("Warning: Skipping id %d, due to missing key %s" % (sweep_id, key))
-
-def SweepDict(file_path_lidar, file_path_flight_path):
-    sweep_dict = csv_reader(file_path_lidar, "lidar_polar")
-    sweep_dict = csv_reader(file_path_flight_path, "drone_position", sweep_dict)
-    add_cartesian_entry(sweep_dict)
-    return sweep_dict
-
-if __name__ == '__main__':
-    flight_path = os.path.join("data", "FlightPath.csv")
-    lidar_path = os.path.join("data", "LIDARPoints.csv")
-
-    sweep_dict = SweepDict(lidar_path, flight_path)
-    #display_drone_data(sweep_dict)
     
