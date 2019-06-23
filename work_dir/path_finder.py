@@ -285,7 +285,7 @@ def store_path(path, store_path, store_id):
 def get_shortest_path(mapping_path, storage_path, start_point, end_point, store_id):
     '''Creates polygons making up a layout from data given by CSV file at mapping_path,
     it further finds the shortest path from start_point to end_point. Then displays
-    shortest path as well as layout. Finally, it saves the path in at store_path
+    shortest path as well as layout. Finally, it saves the path in at storage_path
     with the first point having store_id, and following ids are incremented.'''
     walls = read_mapping_csv(mapping_path)
     walls = walls.reshape(-1, 2, 2) # Split row into the two points making up a wall
