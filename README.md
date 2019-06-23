@@ -19,7 +19,8 @@ Run the following commands in the project folder:
 * To run assignment 4: `python -m work_dir.path_finder.py`
 
 #### Run Tests:
-* To run unit tests: `python -m unittest discover tests`
+* To run unit tests: `python -m unittest discover tests.unit`
+* To run integration tests: `python -m unittest discover tests.integration`
 
 #### Design decisions:
 ##### Assignment 1:
@@ -41,5 +42,4 @@ Run the following commands in the project folder:
     * `inside_out_polygon()`: `pyvisgraph` always defined the blocking from outside and in. Therefore, I could not just make a polygon for the outside wall, as it won't block view in the visibility graph. To go around this, I extended the walls from a tiny point out and around the whole floor plan. You can imagined a ring that does not close up entirly. This opening is not visible because it is so small and because there are no points to see outside, it should not inhibit performance for search algorithms that may stray to the outside of the floorplan.
 
 #### Short review:
-A glaring lack in my assignment is tests. This was sacrificed for the end result as well as time for documentation. If I were to redo the assignment, I would have focused more on this aspect as well was a bit on code structure. It is certainly clear that more classes could have been made. An option parser such as I had in the initial code put in `visualizer.py` would make for a nicer interface with only using a main file. Perhaps it would have been more ideal to have combined assignment 4 and 5. Though I had many ideas for assignment 5, I 
-felt more confident in assignment 1 and 4. The timing was a bit unfortunate as I had a presentation about my general visualization tool on neural networks today (18.06.19), which divided the work sessions on this assignment.
+Could always have greater test coverage. It would be even better to add an adjustment to move path out from the corner edges, which I think is very possible with implementation so far. For instance make circles around points in shortest path. The circles will intersect the path in two places for each point, follow the circle between the intersection points.
